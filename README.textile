@@ -2,7 +2,11 @@ h1. libs
 
 By Simon Gomizelj
 
-This a compiled collection of code that I reuse a lot. These snippets are rough and only ever completed into a fuctional state.
+This a compiled collection of code that I reuse a lot. These snippets are rough and only ever completed into a fuctional state. I have a bad habbit of reimplementing things myself for the sake of learning.
+
+h2. libs/error
+
+A error handling framework loosly inspired by glib's GError.
 
 h2. libs/io
 
