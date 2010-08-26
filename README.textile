@@ -1,0 +1,17 @@
+h1. libs
+
+By Simon Gomizelj
+
+This a compiled collection of libraries that I have written and use/reuse in various projects.
+
+h2. libs/io
+
+A file descriptor/event based file IO system based on glib IOChannel.
+
+h2. libs/rbtree
+
+A red-black tree implmentation based on the "this":http://en.literateprograms.org/Red-black_tree_(C)
+
+h2. libs/sbuf
+
+A string buffer wrapper.
