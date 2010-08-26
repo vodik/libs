@@ -136,6 +136,8 @@ rbnode_new(void *key, void *value, int color)
 	n->key    = key;
 	n->value  = value;
 	n->color  = color;
+
+	n->left = n->right = n->parent = NULL;
 	return n;
 }
 

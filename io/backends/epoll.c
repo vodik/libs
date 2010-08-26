@@ -13,12 +13,12 @@
 
 void add(int fd, int events);
 void rem(int fd);
-void wait(int timeout);
+void poll(int timeout);
 
 struct io_backend epoll = {
 	.add = add,
 	.rem = rem,
-	.wait = wait,
+	.poll = poll,
 };
 
 int epfd = 0;

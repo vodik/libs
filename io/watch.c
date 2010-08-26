@@ -101,7 +101,7 @@ void
 io_poll(int timeout)
 {
 	struct io_backend *backend = io_backend_get(NULL);
-	backend->wait(timeout);
+	backend->poll(timeout);
 }
 
 void

@@ -12,7 +12,7 @@ enum io_events {
 struct io_backend {
 	void (*add)(int fd, int events);
 	void (*rem)(int fd);
-	void (*wait)(int timeout);
+	void (*poll)(int timeout);
 
 	void (*callback)(int fd, int events);
 };
