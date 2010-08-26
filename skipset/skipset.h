@@ -1,5 +1,5 @@
-#ifndef LIBROE_UTIL_SKIPSET
-#define LIBROE_UTIL_SKIPSET
+#ifndef LIBS_SKIPSET
+#define LIBS_SKIPSET
 
 #include "common.h"
 

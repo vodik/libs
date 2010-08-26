@@ -1,5 +1,5 @@
-#ifndef IO_WATCH
-#define IO_WATCH
+#ifndef LIBS_WATCH
+#define LIBS_WATCH
 
 #include "io.h"
 

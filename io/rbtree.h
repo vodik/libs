@@ -1,5 +1,5 @@
-#ifndef RBTREE
-#define RBTREE
+#ifndef LIBS_RBTREE
+#define LIBS_RBTREE
 
 typedef int (*compare_func)(void *left, void *right);
 

@@ -1,5 +1,5 @@
-#ifndef SBUF_H
-#define SBUF_H
+#ifndef LIBS_SBUF
+#define LIBS_SBUF
 
 #include <stdarg.h>
 

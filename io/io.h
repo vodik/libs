@@ -1,5 +1,5 @@
-#ifndef IO_IO
-#define IO_IO
+#ifndef LIBS_IO
+#define LIBS_IO
 
 #include <stddef.h>
 
