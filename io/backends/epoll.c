@@ -11,14 +11,14 @@
 
 #define MAX_EVENTS 1
 
-void epoll_add(int fd, int events);
-void epoll_rem(int fd);
-void epoll_poll(int timeout);
+void add(int fd, int events);
+void rem(int fd);
+void wait(int timeout);
 
 struct io_backend epoll = {
-	.add = epoll_add,
-	.rem = epoll_rem,
-	.wait = epoll_poll
+	.add = add,
+	.rem = rem,
+	.wait = wait,
 };
 
 int epfd = 0;
@@ -38,13 +38,11 @@ epoll_backend_get()
 {
 	if (!epfd)
 		epoll_start();
-
-	//epoll.event = event;
 	return &epoll;
 }
 
 void
-epoll_add(int fd, int events)
+add(int fd, int events)
 {
 	struct epoll_event ev = { .events = EPOLLIN };
 
@@ -56,7 +54,7 @@ epoll_add(int fd, int events)
 }
 
 void
-epoll_rem(int fd)
+rem(int fd)
 {
 	if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL) == -1) {
 		perror("epoll_ctl: EPOLL_CTL_DEL");
@@ -65,7 +63,7 @@ epoll_rem(int fd)
 }
 
 void
-epoll_poll(int timeout)
+poll(int timeout)
 {
 	int nfds, i;
 
