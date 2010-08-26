@@ -15,3 +15,7 @@ A red-black tree implmentation based on "this":http://en.literateprograms.org/Re
 h2. libs/sbuf
 
 A character buffer wrapper which can dynamically resize.
+
+h2. libs/skipset
+
+A skipset Implementation
