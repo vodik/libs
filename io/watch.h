@@ -19,8 +19,8 @@ struct io_backend {
 
 typedef void (*iofunc)(struct io *, int, void *);
 
-void io_watch_init(struct io_backend *backend);
-void io_watch(struct io *io, int events, iofunc func, void *data);
+void io_watch_config(struct io_backend *backend);
+void io_watch(struct io *io, int events, iofunc func, void *arg);
 void io_unwatch(struct io *io);
 
 void io_poll(int timeout);

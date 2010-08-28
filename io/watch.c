@@ -76,13 +76,13 @@ io_backend_get(struct io_backend *override)
 }
 
 void
-io_watch(struct io *io, int events, iofunc func, void *data)
+io_watch(struct io *io, int events, iofunc func, void *arg)
 {
 	struct io_backend *backend = io_backend_get(NULL);
 	int fd = io_get_fd(io);
 
 	backend->add(fd, events);
-	store(io, func, data);
+	store(io, func, arg);
 }
 
 void
