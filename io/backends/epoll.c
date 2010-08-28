@@ -15,7 +15,7 @@ void add(int fd, int events);
 void rem(int fd);
 void poll(int timeout);
 
-struct io_backend epoll = {
+struct io_backend epoll_backend = {
 	.add = add,
 	.rem = rem,
 	.poll = poll,
@@ -38,7 +38,7 @@ epoll_backend_get()
 {
 	if (!epfd)
 		epoll_start();
-	return &epoll;
+	return &epoll_backend;
 }
 
 void

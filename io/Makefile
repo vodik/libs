@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -pedantic -std=gnu99 -O0 -g -I../../..
 
 LIB = libio.a
-SRC = io.c rbtree.c watch.c backends/epoll.c
+SRC = io.c rbtree.c watch.c backends/epoll.c backends/select.c
 OBJ = ${SRC:.c=.o}
 
 all: ${LIB}
