@@ -5,7 +5,6 @@
 #include <unistd.h>
 
 #include <libs/io/io.h>
-#include <libs/io/watch.h>
 
 struct io *server = NULL;
 
@@ -18,7 +17,7 @@ start(const char *path)
 {
 	int fd;
 	struct sockaddr_un addr;
-	int buf_len;/*, ret;*/
+	int buf_len;
 
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
@@ -28,7 +27,7 @@ start(const char *path)
 
 	buf_len = sizeof(addr.sun_path);
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, "/tmp/nmd_ctrl", buf_len);
+	strncpy(addr.sun_path, path, buf_len);
 
 	unlink(addr.sun_path);
 	if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
@@ -68,7 +67,6 @@ client_in(struct io *io, int events, void *arg)
 {
 	if (events & IO_HUP) {
 		printf("-- disconnected\n");
-		io_unwatch(io);
 		io_close(io);
 	} else if (events & IO_IN) {
 		char buf[1024];

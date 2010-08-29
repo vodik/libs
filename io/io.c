@@ -4,20 +4,35 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "io_ref.h"
+#include "watch.c"
 
 struct io *
 io_new_fd(int fd)
 {
 	struct io *io = malloc(sizeof(struct io));
 	io->fd = fd;
+	io->refs = 1;
+
+	io->iofunc = NULL;
+	io->arg = NULL;
+
 	return io;
+}
+
+void
+io_ref(struct io *io)
+{
+	++io->refs;
 }
 
 void
 io_close(struct io *io)
 {
-	close(io->fd);
-	free(io);
+	if (--io->refs == 0) {
+		io_unwatch(io);
+		close(io->fd);
+		free(io);
+	}
 }
 
 int

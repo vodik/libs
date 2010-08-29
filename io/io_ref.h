@@ -3,6 +3,7 @@
 
 struct io {
 	int fd;
+	unsigned refs;
 
 	void (*iofunc)(struct io *, int, void *);
 	void *arg;

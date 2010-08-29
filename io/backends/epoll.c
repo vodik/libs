@@ -49,10 +49,8 @@ get_events(int events) {
 		epoll_events |= EPOLLIN;
 	if (events & IO_OUT)
 		epoll_events |= EPOLLOUT;
-	if (events & IO_HUP) {
+	if (events & IO_HUP)
 		epoll_events |= EPOLLRDHUP | EPOLLHUP;
-		printf("get poop!\n");
-	}
 
 	return epoll_events;
 }
@@ -65,10 +63,8 @@ read_events(int epoll_events) {
 		events |= IO_IN;
 	if (epoll_events & EPOLLOUT)
 		events |= IO_OUT;
-	if (epoll_events & EPOLLRDHUP || epoll_events & EPOLLHUP) {
+	if (epoll_events & EPOLLRDHUP || epoll_events & EPOLLHUP)
 		events |= IO_HUP;
-		printf("read poop!\n");
-	}
 	if (epoll_events & EPOLLERR)
 		events |= IO_ERR;
 

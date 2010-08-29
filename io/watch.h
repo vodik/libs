@@ -1,7 +1,7 @@
 #ifndef LIBS_WATCH
 #define LIBS_WATCH
 
-#include "io.h"
+struct io;
 
 enum io_events {
 	IO_IN  = 0x01,
