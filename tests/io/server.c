@@ -55,10 +55,10 @@ server_accept(struct io *io, int events, void *arg)
 	size_t addr_len = sizeof(addr);
 	struct io *client;
 
-	if (events == IO_IN) {
+	if (events & IO_IN) {
 		if ((cfd = accept(fd, (struct sockaddr *)&addr, &addr_len)) > -1) {
 			client = io_new_fd(cfd);
-			io_watch(client, IO_IN, client_in, NULL);
+			io_watch(client, IO_IN | IO_HUP, client_in, NULL);
 		}
 	}
 }
@@ -66,18 +66,17 @@ server_accept(struct io *io, int events, void *arg)
 void
 client_in(struct io *io, int events, void *arg)
 {
-	if (events == IO_IN) {
+	if (events & IO_HUP) {
+		printf("-- disconnected\n");
+		io_unwatch(io);
+		io_close(io);
+	} else if (events & IO_IN) {
 		char buf[1024];
 		size_t ret;
 
 		ret = io_read(io, buf, 1024);
-		if (ret == 0) {
-			io_unwatch(io);
-			io_close(io);
-		} else {
-			buf[ret] = '\0';
-			puts(buf);
-		}
+		buf[ret] = '\0';
+		puts(buf);
 	}
 }
 

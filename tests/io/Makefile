@@ -24,6 +24,6 @@ server : ${SERVER_OBJ}
 
 clean:
 	@echo cleaning...
-	@rm client server ${OBJ}
+	@rm client server ${SERVER_OBJ} ${CLIENT_OBJ}
 
 .PHONY: all clean

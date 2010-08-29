@@ -21,7 +21,12 @@ stdin_send(struct io *io, int events, void *arg)
 		else
 			buf[ret] = '\0';
 
-		io_write(conn, buf, ret);
+		if (strcmp(buf, "quit") == 0) {
+			io_close(conn);
+			exit(0);
+		}
+		else
+			io_write(conn, buf, ret);
 	}
 }
 
