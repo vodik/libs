@@ -60,7 +60,7 @@ static void
 io_event(int fd, int events)
 {
 	struct store_data *data = load(fd);
-	data->func(data->io, IO_IN, data->arg);
+	data->func(data->io, events, data->arg);
 }
 
 static inline struct io_backend *
