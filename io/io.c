@@ -8,7 +8,7 @@
 struct io *
 io_new_fd(int fd)
 {
-	struct io *io = malloc(sizeof *io);
+	struct io *io = malloc(sizeof(struct io));
 	io->fd = fd;
 	return io;
 }

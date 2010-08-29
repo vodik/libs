@@ -3,6 +3,9 @@
 
 struct io {
 	int fd;
+
+	void (*iofunc)(struct io *, int, void *);
+	void *arg;
 };
 
 #endif

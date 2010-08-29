@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <sys/epoll.h>
 
-#define MAX_EVENTS 1
+#define MAX_EVENTS 10
 
 void add(int fd, int events);
 void rem(int fd);

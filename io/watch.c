@@ -2,66 +2,43 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "rbtree.h"
+#include "io_store.h"
 #include "io_ref.h"
 
 #include "backends/epoll.h"
 
-struct store_data {
-	struct io *io;
-	iofunc func;
-	void *arg;
-};
-
-static struct rbtree *tree = NULL;
-
-static int
-compare_int(void *leftp, void *rightp)
-{
-	int left = (int)leftp;
-	int right = (int)rightp;
-
-	if (left < right)
-		return -1;
-	else if (left > right)
-		return 1;
-	else
-		return 0;
-}
+static struct io_store *tree = NULL;
 
 static void
 store(struct io *io, iofunc func, void *arg)
 {
 	if (!tree)
-		tree = rbtree_create(compare_int);
+		tree = io_store_create();
 
-	struct store_data *data = malloc(sizeof *data);
-	data->io = io;
-	data->func = func;
-	data->arg = arg;
+	io->iofunc = func;
+	io->arg = arg;
 
-	/* TODO */
-	rbtree_add(tree, (void *)io->fd, data);
+	io_store_add(tree, io);
 }
 
 static inline void
-unstore(int fd)
+unstore(struct io *io)
 {
 	if (tree)
-		rbtree_delete(tree, (void *)fd);
+		io_store_delete(tree, io);
 }
 
-static inline struct store_data *
+static inline struct io *
 load(int fd)
 {
-	return tree ? (struct store_data *)rbtree_find(tree, (void *)fd) : NULL;
+	return tree ? io_store_find(tree, fd) : NULL;
 }
 
 static void
 io_event(int fd, int events)
 {
-	struct store_data *data = load(fd);
-	data->func(data->io, events, data->arg);
+	struct io *io = load(fd);
+	io->iofunc(io, events, io->arg);
 }
 
 static inline struct io_backend *
@@ -88,11 +65,7 @@ io_watch(struct io *io, int events, iofunc func, void *arg)
 void
 io_unwatch(struct io *io)
 {
-	struct store_data *data = load(io->fd);
-	if (data) {
-		unstore(io->fd);
-		free(data);
-	}
+	unstore(io);
 }
 
 void

@@ -1,153 +1,83 @@
-#include "rbtree.h"
+#include "io_store.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <memory.h>
-#include <assert.h>
+#include "io_ref.h"
 
-enum rbnode_color { RED, BLACK };
+enum io_node_color { RED, BLACK };
 
-struct rbnode {
-	void *key, *value;
-	struct rbnode *left, *right, *parent;
-	bool color;
+struct io_node {
+	struct io *io;
+	struct io_node *left, *right, *parent;
+	int color;
 };
 
-struct rbtree {
-	struct rbnode *root;
-	compare_func compare;
+struct io_store {
+	struct io_node *root;
 };
 
-static inline bool
-node_color(struct rbnode *n)
+static inline int
+compare(int left, int right)
+{
+	if (left < right)
+		return -1;
+	else if (left > right)
+		return 1;
+	else
+		return 0;
+}
+
+static inline int
+node_color(struct io_node *n)
 {
 	return !n ? BLACK : n->color;
 }
 
-static inline struct rbnode *
-grandparent(struct rbnode *n)
+static inline struct io_node *
+grandparent(struct io_node *n)
 {
-	assert(n);
-	assert(n->parent);
-	assert(n->parent->parent);
 	return n->parent->parent;
 }
 
-static inline struct rbnode *
-sibling(struct rbnode *n)
+static inline struct io_node *
+sibling(struct io_node *n)
 {
-	assert(n);
-	assert(n->parent);
 	return n == n->parent->left ? n->parent->right : n->parent->left;
 }
 
-static inline struct rbnode *
-uncle(struct rbnode *n)
+static inline struct io_node *
+uncle(struct io_node *n)
 {
-	assert(n);
-	assert(n->parent);
-	assert(n->parent->parent);
 	return sibling(n->parent);
 }
 
-/*#define VERIFY_RBTREE
-#ifdef VERIFY_RBTREE
-static void
-verify1(struct rbnode *n)
+struct io_store *
+io_store_create()
 {
-	assert(node_color(n) == RED || node_color(n) == BLACK);
-	if (n) {
-		verify1(n->left);
-		verify1(n->right);
-	}
-}
-
-static void
-verify2(struct rbnode *n)
-{
-	assert(node_color(n) == BLACK);
-}
-
-static void
-verify4(struct rbnode *n)
-{
-	if (node_color(n) == RED) {
-		assert(node_color(n->left) == BLACK);
-		assert(node_color(n->right) == BLACK);
-		assert(node_color(n->parent) == BLACK);
-	}
-	if (n) {
-		verify4(n->left);
-		verify4(n->right);
-	}
-}
-
-static void
-verify5_aid(struct rbnode *n, int bcount, int *path_bcount)
-{
-	if (node_color(n) == BLACK)
-		++bcount;
-	if (!n) {
-		if (*path_bcount == -1)
-			*path_bcount = bcount;
-		else
-			assert(bcount == *path_bcount);
-		return;
-	}
-	verify5_aid(n->left, bcount, path_bcount);
-	verify5_aid(n->right, bcount, path_bcount);
-}
-
-static void
-verify5(struct rbnode *n)
-{
-	int path_bcount = -1;
-	verify5_aid(n, 0, &path_bcount);
-}
-
-static void
-verify(struct rbtree *t)
-{
-	verify1(t->root);
-	verify2(t->root);
-	//verify3(t->root);
-	verify4(t->root);
-	verify5(t->root);
-}
-#endif*/
-
-struct rbtree *
-rbtree_create(compare_func compare)
-{
-	struct rbtree *t = malloc(sizeof(struct rbtree));
+	struct io_store *t = malloc(sizeof(struct io_store));
 	t->root = NULL;
-	t->compare = compare;
-#ifdef VERIFY
-	verify(t);
-#endif
 	return t;
 }
 
-static struct rbnode *
-rbnode_new(void *key, void *value, int color)
+static struct io_node *
+io_node_new(struct io *io, int color)
 {
-	struct rbnode *n = malloc(sizeof(struct rbnode));
-	n->key    = key;
-	n->value  = value;
-	n->color  = color;
+	struct io_node *n = malloc(sizeof(struct io_node));
+	n->io = io;
+	n->color = color;
 
 	n->left = n->right = n->parent = NULL;
 	return n;
 }
 
-static struct rbnode *
-rbnode_find(struct rbnode *n, void *key, compare_func compare)
+static struct io_node *
+io_node_find(struct io_node *n, int fd)
 {
 	int res;
 
 	while (n) {
-		res = compare(key, n->key);
+		res = compare(fd, n->io->fd);
 		if (res == 0)
 			return n;
 		else if (res < 0)
@@ -158,15 +88,15 @@ rbnode_find(struct rbnode *n, void *key, compare_func compare)
 	return NULL;
 }
 
-void *
-rbtree_find(struct rbtree *t, void *key)
+struct io *
+io_store_find(struct io_store *t, int fd)
 {
-	struct rbnode *n = rbnode_find(t->root, key, t->compare);
-	return !n ? NULL : n->value;
+	struct io_node *n = io_node_find(t->root, fd);
+	return !n ? NULL : n->io;
 }
 
 static void
-replace_node(struct rbtree *t, struct rbnode *old, struct rbnode *new)
+replace_node(struct io_store *t, struct io_node *old, struct io_node *new)
 {
 	if (!old->parent)
 		t->root = new;
@@ -181,9 +111,9 @@ replace_node(struct rbtree *t, struct rbnode *old, struct rbnode *new)
 }
 
 static void
-rotate_left(struct rbtree *t, struct rbnode *n)
+rotate_left(struct io_store *t, struct io_node *n)
 {
-	struct rbnode *r = n->right;
+	struct io_node *r = n->right;
 	replace_node(t, n, r);
 	n->right = r->left;
 	if (r->left)
@@ -193,9 +123,9 @@ rotate_left(struct rbtree *t, struct rbnode *n)
 }
 
 static void
-rotate_right(struct rbtree *t, struct rbnode *n)
+rotate_right(struct io_store *t, struct io_node *n)
 {
-	struct rbnode *l = n->left;
+	struct io_node *l = n->left;
 	replace_node(t, n, l);
 	n->left = l->right;
 	if (l->right)
@@ -205,7 +135,7 @@ rotate_right(struct rbtree *t, struct rbnode *n)
 }
 
 static void
-insert1(struct rbtree *t, struct rbnode *n)
+insert1(struct io_store *t, struct io_node *n)
 {
 	if (!n->parent) {
 		n->color = BLACK;
@@ -236,29 +166,29 @@ insert1(struct rbtree *t, struct rbnode *n)
 }
 
 void
-rbtree_add(struct rbtree *t, void *key, void *value)
+io_store_add(struct io_store *t, struct io *io)
 {
-	struct rbnode *n, *ins;
+	struct io_node *n, *ins;
 	int res;
 
 	if (!t->root) {
-		ins = t->root = rbnode_new(key, value, RED);
+		ins = t->root = io_node_new(io, RED);
 	} else {
 		n = t->root;
 		while (1) {
-			res = t->compare(key, n->key);
+			res = compare(io->fd, n->io->fd);
 			if (res == 0) {
-				n->value = value;
+				n->io = io;
 				return;
 			} else if (res < 0) {
 				if (!n->left) {
-					ins = n->left = rbnode_new(key, value, RED);
+					ins = n->left = io_node_new(io, RED);
 					break;
 				} else
 					n = n->left;
 			} else {
 				if (!n->right) {
-					ins = n->right = rbnode_new(key, value, RED);
+					ins = n->right = io_node_new(io, RED);
 					break;
 				} else
 					n = n->right;
@@ -267,21 +197,17 @@ rbtree_add(struct rbtree *t, void *key, void *value)
 		ins->parent = n;
 	}
 	insert1(t, ins);
-#ifdef VERIFY
-	verify(t);
-#endif
 }
 
-static struct rbnode *
-maximum_node(struct rbnode *n) {
-	assert(n);
+static struct io_node *
+maximum_node(struct io_node *n) {
 	while (n->right != NULL)
 		n = n->right;
 	return n;
 }
 
 static void
-delete1(struct rbtree *t, struct rbnode *n)
+delete1(struct io_store *t, struct io_node *n)
 {
 	if (!n->parent)
 		return;
@@ -327,30 +253,26 @@ delete1(struct rbtree *t, struct rbnode *n)
 	sibling(n)->color = node_color(n->parent);
 	n->parent->color = BLACK;
 	if (n == n->parent->left) {
-		assert(node_color(sibling(n)->right) == RED);
 		sibling(n)->right->color = BLACK;
 		rotate_left(t, n->parent);
 	} else {
-		assert(node_color(sibling(n)->left) == RED);
 		sibling(n)->left->color = BLACK;
 		rotate_right(t, n->parent);
 	}
 }
 
 void
-rbtree_delete(struct rbtree *t, void *key)
+io_store_delete(struct io_store *t, struct io *io)
 {
-	struct rbnode *child, *n;
-	if (!(n = rbnode_find(t->root, key, t->compare)))
+	struct io_node *child, *n;
+	if (!(n = io_node_find(t->root, io->fd)))
 		return;
 	if (n->left && n->right) {
-		struct rbnode *pred = maximum_node(n->left);
-		n->key = pred->key;
-		n->value = pred->value;
+		struct io_node *pred = maximum_node(n->left);
+		n->io = pred->io;
 		n = pred;
 	}
 
-	assert(!n->left || !n->right);
 	child = !n->right ? n->left : n->right;
 	if (node_color(n) == BLACK) {
 		n->color = node_color(child);
@@ -360,7 +282,4 @@ rbtree_delete(struct rbtree *t, void *key)
 	if (!n->parent && child)
 		child->color = BLACK;
 	free(n);
-#ifdef VERIFY
-	verify(t);
-#endif
 }
