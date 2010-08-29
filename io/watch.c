@@ -21,42 +21,12 @@ get_epoll_fd()
 	return epfd;
 }
 
-static int
-from_io_events(int events) {
-	int epoll_events = 0;
-
-	if (events & IO_IN)
-		epoll_events |= EPOLLIN;
-	if (events & IO_OUT)
-		epoll_events |= EPOLLOUT;
-	if (events & IO_HUP)
-		epoll_events |= EPOLLRDHUP | EPOLLHUP;
-
-	return epoll_events;
-}
-
-static int
-to_io_events(int epoll_events) {
-	int events = 0;
-
-	if (epoll_events & EPOLLIN)
-		events |= IO_IN;
-	if (epoll_events & EPOLLOUT)
-		events |= IO_OUT;
-	if (epoll_events & EPOLLRDHUP || epoll_events & EPOLLHUP)
-		events |= IO_HUP;
-	if (epoll_events & EPOLLERR)
-		events |= IO_ERR;
-
-	return events;
-}
-
 void
 io_watch(struct io *io, int events, iofunc func, void *arg)
 {
 	int epfd = get_epoll_fd();
 	struct epoll_event ev = { .events = EPOLLET };
-	ev.events = from_io_events(events);
+	ev.events = events;
 
 	io->iofunc = func;
 	io->arg = arg;
@@ -92,7 +62,7 @@ io_poll(int timeout)
 
 	for (i = 0; i < nfds; ++i) {
 		struct io *io = events[i].data.ptr;
-		io->iofunc(io, to_io_events(events[i].events), io->arg);
+		io->iofunc(io, events[i].events, io->arg);
 	}
 }
 

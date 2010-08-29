@@ -1,26 +1,18 @@
 #ifndef LIBS_WATCH
 #define LIBS_WATCH
 
+#include <sys/epoll.h>
+
 struct io;
 
 enum io_events {
-	IO_IN  = 0x01,
-	IO_OUT = 0x02,
-	IO_HUP = 0x04,
-	IO_ERR = 0x08,
-};
-
-struct io_backend {
-	void (*add)(struct io *io, int events);
-	void (*rem)(struct io *io);
-	void (*poll)(int timeout);
-
-	void (*callback)(int fd, int events, struct io *maybe);
+	IO_IN  = EPOLLIN,
+	IO_OUT = EPOLLOUT,
+	IO_HUP = EPOLLRDHUP,
 };
 
 typedef void (*iofunc)(struct io *, int, void *);
 
-void io_watch_config(struct io_backend *backend);
 void io_watch(struct io *io, int events, iofunc func, void *arg);
 void io_unwatch(struct io *io);
 
