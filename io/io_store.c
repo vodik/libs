@@ -135,7 +135,7 @@ rotate_right(struct io_store *t, struct io_node *n)
 }
 
 static void
-insert1(struct io_store *t, struct io_node *n)
+post_add(struct io_store *t, struct io_node *n)
 {
 	if (!n->parent) {
 		n->color = BLACK;
@@ -147,7 +147,7 @@ insert1(struct io_store *t, struct io_node *n)
 		n->parent->color = BLACK;
 		uncle(n)->color = BLACK;
 		grandparent(n)->color = RED;
-		insert1(t, grandparent(n));
+		post_add(t, grandparent(n));
 		return;
 	}
 	if (n == n->parent->right && n->parent == grandparent(n)->left) {
@@ -196,7 +196,7 @@ io_store_add(struct io_store *t, struct io *io)
 		}
 		ins->parent = n;
 	}
-	insert1(t, ins);
+	post_add(t, ins);
 }
 
 static struct io_node *
@@ -207,7 +207,7 @@ maximum_node(struct io_node *n) {
 }
 
 static void
-delete1(struct io_store *t, struct io_node *n)
+post_delete(struct io_store *t, struct io_node *n)
 {
 	if (!n->parent)
 		return;
@@ -224,7 +224,7 @@ delete1(struct io_store *t, struct io_node *n)
 		node_color(sibling(n)->left) == BLACK &&
 		node_color(sibling(n)->right) == BLACK) {
 		sibling(n)->color = RED;
-		delete1(t, n->parent);
+		post_delete(t, n->parent);
 		return;
 	}
 	if (node_color(n->parent) == RED &&
@@ -276,7 +276,7 @@ io_store_delete(struct io_store *t, struct io *io)
 	child = !n->right ? n->left : n->right;
 	if (node_color(n) == BLACK) {
 		n->color = node_color(child);
-		delete1(t, n);
+		post_delete(t, n);
 	}
 	replace_node(t, n, child);
 	if (!n->parent && child)

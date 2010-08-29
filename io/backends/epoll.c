@@ -4,15 +4,12 @@
 #include <stdio.h>
 #include <sys/epoll.h>
 #include "epoll.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/epoll.h>
+#include "../io_ref.h"
 
 #define MAX_EVENTS 10
 
-void add(int fd, int events);
-void rem(int fd);
+void add(struct io *io, int events);
+void rem(struct io *io);
 void poll(int timeout);
 
 struct io_backend epoll_backend = {
@@ -42,7 +39,7 @@ epoll_backend_get()
 }
 
 static int
-get_events(int events) {
+from_io_events(int events) {
 	int epoll_events = 0;
 
 	if (events & IO_IN)
@@ -56,7 +53,7 @@ get_events(int events) {
 }
 
 static int
-read_events(int epoll_events) {
+to_io_events(int epoll_events) {
 	int events = 0;
 
 	if (epoll_events & EPOLLIN)
@@ -72,22 +69,22 @@ read_events(int epoll_events) {
 }
 
 void
-add(int fd, int events)
+add(struct io *io, int events)
 {
 	struct epoll_event ev = { .events = EPOLLET };
-	ev.events = get_events(events);
+	ev.events = from_io_events(events);
 
-	ev.data.fd = fd;
-	if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+	ev.data.ptr = io;
+	if (epoll_ctl(epfd, EPOLL_CTL_ADD, io->fd, &ev) == -1) {
 		perror("epoll_ctl: EPOLL_CTL_ADD");
 		exit(EXIT_FAILURE);
 	}
 }
 
 void
-rem(int fd)
+rem(struct io *io)
 {
-	if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL) == -1) {
+	if (epoll_ctl(epfd, EPOLL_CTL_DEL, io->fd, NULL) == -1) {
 		perror("epoll_ctl: EPOLL_CTL_DEL");
 		exit(EXIT_FAILURE);
 	}
@@ -103,6 +100,8 @@ poll(int timeout)
 		exit(EXIT_FAILURE);
 	}
 
-	for (i = 0; i < nfds; ++i)
-		epoll_backend.callback(events[i].data.fd, read_events(events[i].events));
+	for (i = 0; i < nfds; ++i) {
+		struct io *io = events[i].data.ptr;
+		epoll_backend.callback(io->fd, to_io_events(events[i].events), io);
+	}
 }

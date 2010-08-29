@@ -29,7 +29,6 @@ void
 io_close(struct io *io)
 {
 	if (--io->refs == 0) {
-		io_unwatch(io);
 		close(io->fd);
 		free(io);
 	}

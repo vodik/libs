@@ -57,6 +57,7 @@ server_accept(struct io *io, int events, void *arg)
 	if (events & IO_IN) {
 		if ((cfd = accept(fd, (struct sockaddr *)&addr, &addr_len)) > -1) {
 			client = io_new_fd(cfd);
+			printf("-- [%02d] connected\n", cfd);
 			io_watch(client, IO_IN | IO_HUP, client_in, NULL);
 		}
 	}
@@ -66,7 +67,7 @@ void
 client_in(struct io *io, int events, void *arg)
 {
 	if (events & IO_HUP) {
-		printf("-- disconnected\n");
+		printf("-- [%02d] disconnected\n", io_get_fd(io));
 		io_close(io);
 	} else if (events & IO_IN) {
 		char buf[1024];
@@ -74,7 +75,9 @@ client_in(struct io *io, int events, void *arg)
 
 		ret = io_read(io, buf, 1024);
 		buf[ret] = '\0';
-		puts(buf);
+		printf("[%02d]%s\n", io_get_fd(io), buf);
+
+		//write_back(buf, ret);
 	}
 }
 

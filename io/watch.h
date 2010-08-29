@@ -11,11 +11,11 @@ enum io_events {
 };
 
 struct io_backend {
-	void (*add)(int fd, int events);
-	void (*rem)(int fd);
+	void (*add)(struct io *io, int events);
+	void (*rem)(struct io *io);
 	void (*poll)(int timeout);
 
-	void (*callback)(int fd, int events);
+	void (*callback)(int fd, int events, struct io *maybe);
 };
 
 typedef void (*iofunc)(struct io *, int, void *);
