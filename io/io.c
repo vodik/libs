@@ -3,10 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
-struct io {
-	int fd;
-};
+#include "io_ref.h"
 
 struct io *
 io_new_fd(int fd)

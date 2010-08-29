@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "rbtree.h"
+#include "io_ref.h"
 
 #include "backends/epoll.h"
 
@@ -40,7 +41,7 @@ store(struct io *io, iofunc func, void *arg)
 	data->arg = arg;
 
 	/* TODO */
-	rbtree_add(tree, (void *)io_get_fd(io), data);
+	rbtree_add(tree, (void *)io->fd, data);
 }
 
 static inline void
@@ -79,20 +80,17 @@ void
 io_watch(struct io *io, int events, iofunc func, void *arg)
 {
 	struct io_backend *backend = io_backend_get(NULL);
-	int fd = io_get_fd(io);
 
-	backend->add(fd, events);
+	backend->add(io->fd, events);
 	store(io, func, arg);
 }
 
 void
 io_unwatch(struct io *io)
 {
-	int fd = io_get_fd(io);
-
-	struct store_data *data = load(fd);
+	struct store_data *data = load(io->fd);
 	if (data) {
-		unstore(fd);
+		unstore(io->fd);
 		free(data);
 	}
 }

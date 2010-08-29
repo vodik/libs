@@ -5,8 +5,9 @@
 
 enum io_events {
 	IO_IN  = 0x01,
-	IO_HUP = 0x02,
-	IO_ERR = 0x04,
+	IO_OUT = 0x02,
+	IO_HUP = 0x04,
+	IO_ERR = 0x08,
 };
 
 struct io_backend {
