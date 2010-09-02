@@ -15,9 +15,11 @@ struct buf {
 };
 
 struct obuf *obuf_new(size_t size, buf_fill fill, void *arg);
+void obuf_free(struct obuf *buf);
 size_t obuf_read(struct obuf *buf, char *dest, size_t len);
 
 struct ibuf *ibuf_new(size_t size, buf_push push, void *arg);
+void ibuf_free(struct ibuf *buf);
 size_t ibuf_write(struct ibuf *buf, const char *src, size_t len);
 void ibuf_flush(struct ibuf *buf);
 

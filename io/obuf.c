@@ -39,6 +39,13 @@ obuf_new(size_t size, buf_fill fill, void *arg)
 	return buf;
 }
 
+void obuf_free(struct obuf *buf)
+{
+	if (buf->ptr)
+		free(buf->ptr);
+	free(buf);
+}
+
 size_t
 obuf_read(struct obuf *buf, char *dest, size_t len)
 {

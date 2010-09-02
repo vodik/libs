@@ -9,7 +9,7 @@ struct io {
 
 	void (*iofunc)(struct io *, int, void *);
 	void *arg;
-	struct obuf *obuf;
+	struct buf *buf;
 };
 
 #endif
