@@ -5,58 +5,65 @@
 
 struct ibuf {
 	char *ptr;
-	size_t offset, size;
-	buf_push push;
+	size_t offset, len, size;
+	buf_fill fill;
 	void *arg;
-	int dirty;
+	int do_read;
 };
 
+static inline size_t
+ibuf_fill(struct ibuf *buf)
+{
+	if (!buf->ptr)
+		buf->ptr = malloc(buf->size);
+
+	buf->offset = 0;
+	buf->do_read = 0;
+	buf->len = buf->fill(buf->ptr, buf->size, buf->arg);
+
+	return buf->len;
+}
+
 struct ibuf *
-ibuf_new(size_t size, buf_push push, void *arg)
+ibuf_new(size_t size, buf_fill fill, void *arg)
 {
 	struct ibuf *buf = malloc(sizeof(struct ibuf));
 
 	buf->ptr = NULL;
 	buf->size = size;
-	buf->offset = 0;
-	buf->push = push;
+	buf->len = buf->offset = 0;
+	buf->do_read = 1;
+	buf->fill = fill;
 	buf->arg = arg;
-	buf->dirty = 1;
 
 	return buf;
 }
 
 void ibuf_free(struct ibuf *buf)
 {
-	if (buf->dirty)
-		ibuf_flush(buf);
 	if (buf->ptr)
 		free(buf->ptr);
 	free(buf);
 }
 
 size_t
-ibuf_write(struct ibuf *buf, const char *src, size_t len)
+ibuf_read(struct ibuf *buf, char *dest, size_t len)
 {
-	if (!buf->ptr)
-		buf->ptr = malloc(buf->size);
+	if (buf->do_read)
+		ibuf_fill(buf);
 
 	size_t ret = 0;
 	while(--len) {
-		*(buf->ptr + buf->offset++) = *src++;
+		*dest++ = *(buf->ptr + buf->offset++);
 		++ret;
 
-		if (buf->offset == buf->size)
-			ibuf_flush(buf);
+		if (buf->offset == buf->size) {
+			if (ibuf_fill(buf) == 0)
+				return ret;
+		} else if (buf->offset == buf->len) {
+			buf->do_read = 1;
+			return ret;
+		}
 	}
 	return ret;
-}
-
-void
-ibuf_flush(struct ibuf *buf)
-{
-	if (buf->ptr) {
-		buf->push(buf->ptr, buf->offset, buf->arg);
-		buf->offset = 0;
-	}
 }

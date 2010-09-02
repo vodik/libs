@@ -6,21 +6,27 @@
 typedef size_t (*buf_fill)(char *buf, size_t len, void *arg);
 typedef size_t (*buf_push)(const char *buf, size_t len, void *arg);
 
-struct ibuf;
 struct obuf;
+struct ibuf;
 
 struct buf {
-	struct ibuf *i;
-	struct obuf *o;
+	struct obuf *i;
+	struct ibuf *o;
 };
 
-struct obuf *obuf_new(size_t size, buf_fill fill, void *arg);
-void obuf_free(struct obuf *buf);
-size_t obuf_read(struct obuf *buf, char *dest, size_t len);
-
-struct ibuf *ibuf_new(size_t size, buf_push push, void *arg);
+struct ibuf *ibuf_new(size_t size, buf_fill fill, void *arg);
 void ibuf_free(struct ibuf *buf);
-size_t ibuf_write(struct ibuf *buf, const char *src, size_t len);
-void ibuf_flush(struct ibuf *buf);
+size_t ibuf_read(struct ibuf *buf, char *dest, size_t len);
+
+struct obuf *obuf_new(size_t size, buf_push push, void *arg);
+void obuf_free(struct obuf *buf);
+size_t obuf_write(struct obuf *buf, const char *src, size_t len);
+void obuf_flush(struct obuf *buf);
+
+struct buf *buf_new(size_t size, buf_fill fill, buf_push push, void *arg);
+void buf_free(struct buf *buf);
+size_t buf_read(struct buf *buf, char *dest, size_t len);
+size_t buf_write(struct buf *buf, const char *src, size_t len);
+void buf_flush(struct buf *buf);
 
 #endif

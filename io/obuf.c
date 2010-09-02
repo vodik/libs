@@ -5,65 +5,58 @@
 
 struct obuf {
 	char *ptr;
-	size_t offset, len, size;
-	buf_fill fill;
+	size_t offset, size;
+	buf_push push;
 	void *arg;
-	int do_read;
+	int dirty;
 };
 
-static inline size_t
-obuf_fill(struct obuf *buf)
-{
-	if (!buf->ptr)
-		buf->ptr = malloc(buf->size);
-
-	buf->offset = 0;
-	buf->do_read = 0;
-	buf->len = buf->fill(buf->ptr, buf->size, buf->arg);
-
-	return buf->len;
-}
-
 struct obuf *
-obuf_new(size_t size, buf_fill fill, void *arg)
+obuf_new(size_t size, buf_push push, void *arg)
 {
 	struct obuf *buf = malloc(sizeof(struct obuf));
 
 	buf->ptr = NULL;
 	buf->size = size;
-	buf->len = buf->offset = 0;
-	buf->do_read = 1;
-	buf->fill = fill;
+	buf->offset = 0;
+	buf->push = push;
 	buf->arg = arg;
+	buf->dirty = 1;
 
 	return buf;
 }
 
 void obuf_free(struct obuf *buf)
 {
+	if (buf->dirty)
+		obuf_flush(buf);
 	if (buf->ptr)
 		free(buf->ptr);
 	free(buf);
 }
 
 size_t
-obuf_read(struct obuf *buf, char *dest, size_t len)
+obuf_write(struct obuf *buf, const char *src, size_t len)
 {
-	if (buf->do_read)
-		obuf_fill(buf);
+	if (!buf->ptr)
+		buf->ptr = malloc(buf->size);
 
 	size_t ret = 0;
 	while(--len) {
-		*dest++ = *(buf->ptr + buf->offset++);
+		*(buf->ptr + buf->offset++) = *src++;
 		++ret;
 
-		if (buf->offset == buf->size) {
-			if (obuf_fill(buf) == 0)
-				return ret;
-		} else if (buf->offset == buf->len) {
-			buf->do_read = 1;
-			return ret;
-		}
+		if (buf->offset == buf->size)
+			obuf_flush(buf);
 	}
 	return ret;
+}
+
+void
+obuf_flush(struct obuf *buf)
+{
+	if (buf->ptr) {
+		buf->push(buf->ptr, buf->offset, buf->arg);
+		buf->offset = 0;
+	}
 }

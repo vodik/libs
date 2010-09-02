@@ -25,8 +25,7 @@ void
 io_watch(struct io *io, int events, iofunc func, void *arg)
 {
 	int epfd = get_epoll_fd();
-	struct epoll_event ev = { .events = EPOLLET };
-	ev.events = events;
+	struct epoll_event ev = { .events = EPOLLET | events };
 
 	io->iofunc = func;
 	io->arg = arg;

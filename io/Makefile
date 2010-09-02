@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -pedantic -std=gnu99 -O0 -g -I../../..
 
 LIB = libio.a
-SRC = io.c watch.c
+SRC = io.c watch.c obuf.c ibuf.c buf.c
 OBJ = ${SRC:.c=.o}
 
 all: ${LIB}

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "io_ref.h"
 #include "watch.c"
+#include "buf.h"
 
 static size_t
 io_buf_read(char *buf, size_t len, void *arg)
