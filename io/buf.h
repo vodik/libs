@@ -6,13 +6,9 @@
 typedef size_t (*buf_fill)(char *buf, size_t len, void *arg);
 typedef size_t (*buf_push)(const char *buf, size_t len, void *arg);
 
+struct buf;
 struct obuf;
 struct ibuf;
-
-struct buf {
-	struct obuf *i;
-	struct ibuf *o;
-};
 
 struct ibuf *ibuf_new(size_t size, buf_fill fill, void *arg);
 void ibuf_free(struct ibuf *buf);
